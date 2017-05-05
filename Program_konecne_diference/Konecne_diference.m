@@ -79,7 +79,6 @@ set(handles.busy,'String','Èakajte prosím   Vıpoèet prebieha');
 guidata(hObject,handles);
 drawnow();
 %extrahovat data z GIU
-inputa = strcat('(',get(handles.inputa,'String'),')');
 inputy = strcat('(',get(handles.inputy,'String'),')');
 inputyd = strcat('(',get(handles.inputyd,'String'),')');
 inputydd = strcat('(',get(handles.inputydd,'String'),')');
@@ -113,15 +112,28 @@ if presnost==0
    guidata(hObject,handles);
    return;
 end
+[ok_subs_center, ok_subs_pos] = over_podmienky(...
+    inputydd,inputyd,inputy,a,b,100);
 %% definovat substituce, rovnice
 syms x y_ip y_i y_in h
 %subsitucie * h^2
 subs_y = '(y_i*h^2)';
-subs_yd = '(((y_ip-y_in)/2)*h)';%'((y_ip-y_i)*h)';
+if (ok_subs_center)
+    subs_yd = '(((y_ip-y_in)/2)*h)';
+else
+    if (ok_subs_pos)
+        subs_yd = '((y_ip-y_i)*h)';
+    else
+       msg = 'Rovnica sa nedá rieši touto metódou!';
+       set(handles.busy,'String',msg);
+       guidata(hObject,handles);
+       return;
+    end
+end
 subs_ydd = '(y_ip-2*y_i+y_in)';
 
 %vytvorit lavu stranu rovnice
-LHS = strcat('(',inputa,')+(',inputy,')*',subs_y,'+(',inputyd,')*'...
+LHS = strcat('(',inputy,')*',subs_y,'+(',inputyd,')*'...
     ,subs_yd,'+(',inputydd,')*',subs_ydd);
 difeq = eval(LHS);
 difeq = expand(difeq);
